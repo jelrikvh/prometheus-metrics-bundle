@@ -260,6 +260,27 @@ class MetricsCollectorListenerTest extends TestCase
         $listener->onConsoleCommand($evt);
     }
 
+    public function testOnConsoleCommandIgnoredConsoleCommands(): void
+    {
+        $command = $this->createMock(Command::class);
+        $command->method('getName')->willReturn('myapp:test:ignored-command');
+
+        $evt = new ConsoleCommandEvent(
+            $command,
+            $this->createMock(InputInterface::class),
+            $this->createMock(OutputInterface::class)
+        );
+
+        $collector = $this->createMock(ConsoleCommandMetricsCollectorInterface::class);
+        $collector->expects(self::never())->method('collectConsoleCommand')->with($evt);
+
+        $registry = new MetricsCollectorRegistry();
+        $registry->registerMetricsCollector($collector);
+
+        $listener = new MetricsCollectorListener($registry, [], ['myapp:test:ignored-command']);
+        $listener->onConsoleCommand($evt);
+    }
+
     public function testOnConsoleTerminate(): void
     {
         $evt = new ConsoleTerminateEvent(
@@ -282,6 +303,28 @@ class MetricsCollectorListenerTest extends TestCase
         $listener->onConsoleTerminate($evt);
     }
 
+    public function testOnConsoleTerminateIgnoredConsoleCommands(): void
+    {
+        $command = $this->createMock(Command::class);
+        $command->method('getName')->willReturn('myapp:test:ignored-command');
+
+        $evt = new ConsoleTerminateEvent(
+            $command,
+            $this->createMock(InputInterface::class),
+            $this->createMock(OutputInterface::class),
+            0
+        );
+
+        $collector = $this->createMock(ConsoleTerminateMetricsCollectorInterface::class);
+        $collector->expects(self::never())->method('collectConsoleTerminate')->with($evt);
+
+        $registry = new MetricsCollectorRegistry();
+        $registry->registerMetricsCollector($collector);
+
+        $listener = new MetricsCollectorListener($registry, [], ['myapp:test:ignored-command']);
+        $listener->onConsoleTerminate($evt);
+    }
+
     public function testOnConsoleError(): void
     {
         $evt = new ConsoleErrorEvent(
@@ -301,6 +344,28 @@ class MetricsCollectorListenerTest extends TestCase
         $registry->registerMetricsCollector($collector2);
 
         $listener = new MetricsCollectorListener($registry);
+        $listener->onConsoleError($evt);
+    }
+
+    public function testOnConsoleErrorIgnoredConsoleCommands(): void
+    {
+        $command = $this->createMock(Command::class);
+        $command->method('getName')->willReturn('myapp:test:ignored-command');
+
+        $evt = new ConsoleErrorEvent(
+            $this->createMock(InputInterface::class),
+            $this->createMock(OutputInterface::class),
+            $this->createMock(Throwable::class),
+            $command
+        );
+
+        $collector = $this->createMock(ConsoleErrorMetricsCollectorInterface::class);
+        $collector->expects(self::never())->method('collectConsoleError')->with($evt);
+
+        $registry = new MetricsCollectorRegistry();
+        $registry->registerMetricsCollector($collector);
+
+        $listener = new MetricsCollectorListener($registry, [], ['myapp:test:ignored-command']);
         $listener->onConsoleError($evt);
     }
 }

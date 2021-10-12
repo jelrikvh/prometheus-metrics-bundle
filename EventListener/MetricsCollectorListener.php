@@ -41,10 +41,16 @@ class MetricsCollectorListener implements LoggerAwareInterface
      */
     private $ignoredRoutes;
 
-    public function __construct(MetricsCollectorRegistry $metricsCollectors, array $ignoredRoutes = ['prometheus_bundle_prometheus'])
+    /**
+     * @var array
+     */
+    private $ignoredConsoleCommands;
+
+    public function __construct(MetricsCollectorRegistry $metricsCollectors, array $ignoredRoutes = ['prometheus_bundle_prometheus'], array $ignoredConsoleCommands = [])
     {
         $this->metricsCollectors = $metricsCollectors;
         $this->ignoredRoutes = $ignoredRoutes;
+        $this->ignoredConsoleCommands = $ignoredConsoleCommands;
     }
 
     public function onKernelRequestPre(RequestEvent $event): void
@@ -177,6 +183,11 @@ class MetricsCollectorListener implements LoggerAwareInterface
 
     public function onConsoleCommand(ConsoleCommandEvent $event)
     {
+        $commandName = $event->getCommand()->getName();
+        if (in_array($commandName, $this->ignoredConsoleCommands, true)) {
+            return;
+        }
+
         foreach ($this->metricsCollectors->getMetricsCollectors() as $collector) {
             if (!self::isSupportedEvent($collector, 'collectConsoleCommand', ConsoleCommandMetricsCollectorInterface::class)) {
                 continue;
@@ -197,6 +208,11 @@ class MetricsCollectorListener implements LoggerAwareInterface
 
     public function onConsoleTerminate(ConsoleTerminateEvent $event)
     {
+        $commandName = $event->getCommand()->getName();
+        if (in_array($commandName, $this->ignoredConsoleCommands, true)) {
+            return;
+        }
+
         foreach ($this->metricsCollectors->getMetricsCollectors() as $collector) {
             if (!self::isSupportedEvent($collector, 'collectConsoleTerminate', ConsoleTerminateMetricsCollectorInterface::class)) {
                 continue;
@@ -217,6 +233,11 @@ class MetricsCollectorListener implements LoggerAwareInterface
 
     public function onConsoleError(ConsoleErrorEvent $event)
     {
+        $commandName = $event->getCommand()->getName();
+        if (in_array($commandName, $this->ignoredConsoleCommands, true)) {
+            return;
+        }
+
         foreach ($this->metricsCollectors->getMetricsCollectors() as $collector) {
             if (!self::isSupportedEvent($collector, 'collectConsoleError', ConsoleErrorMetricsCollectorInterface::class)) {
                 continue;
